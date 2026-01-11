@@ -1,118 +1,135 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { Product } from "@/types/product";
-import ProductGrid from "./ProductGrid";
-import SearchBar from "./SearchBar";
-import CategoryDropdown from "./CategoryDropdown";
-import FavoritesToggle from "./FavoritesToggle";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useEffect, useMemo, useState } from "react"
+import { Product } from "@/types/product"
+import ProductGrid from "./ProductGrid"
+import LoadingSkeleton from "./LoadingSkeleton"
+import SearchBar from "./SearchBar"
+import SortSelect from "./SortSelect"
+import CategoryDropdown from "./CategoryDropdown"
 
-interface Props {
-  products: Product[];
-}
+const ITEMS_PER_PAGE = 8
 
-const ITEMS_PER_PAGE = 8;
+export default function ProductsClient() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-export default function ProductsClient({ products }: Props) {
-  const searchParams = useSearchParams();
-  const favoritesParam = searchParams.get("favorites");
-
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [showFavorites, setShowFavorites] = useState(false);
-  const [sort, setSort] = useState<"" | "asc" | "desc">("");
-  const [page, setPage] = useState(1);
-
-  const { favorites } = useFavorites();
+  const [search, setSearch] = useState("")
+  const [category, setCategory] = useState("")
+  const [sort, setSort] = useState("")
+  const [page, setPage] = useState(1)
+  const [showFavorites, setShowFavorites] = useState(false)
 
   useEffect(() => {
-    if (favoritesParam === "true") setShowFavorites(true);
-  }, [favoritesParam]);
+    async function loadProducts() {
+      try {
+        const res = await fetch("https://fakestoreapi.com/products")
+        if (!res.ok) throw new Error()
+        const data = await res.json()
+        setProducts(data)
+      } catch {
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const categories = Array.from(new Set(products.map((p) => p.category)));
+    loadProducts()
+  }, [])
 
-  const filtered = products.filter((p) => {
-    const s = p.title.toLowerCase().includes(search.toLowerCase());
-    const c = !category || p.category === category;
-    const f = !showFavorites || favorites.includes(p.id);
-    return s && c && f;
-  });
+  const favorites = useMemo<number[]>(() => {
+    if (typeof window === "undefined") return []
+    return JSON.parse(localStorage.getItem("favorites") || "[]")
+  }, [])
 
-  const sorted = [...filtered].sort((a, b) => {
-    if (sort === "asc") return a.price - b.price;
-    if (sort === "desc") return b.price - a.price;
-    return 0;
-  });
+  const filtered = useMemo(() => {
+    let list = [...products]
 
-  const start = (page - 1) * ITEMS_PER_PAGE;
-  const paginated = sorted.slice(start, start + ITEMS_PER_PAGE);
+    if (showFavorites) {
+      list = list.filter(p => favorites.includes(p.id))
+    }
+
+    if (search) {
+      list = list.filter(p =>
+        p.title.toLowerCase().includes(search.toLowerCase())
+      )
+    }
+
+    if (category) {
+      list = list.filter(p => p.category === category)
+    }
+
+    if (sort === "low") {
+      list.sort((a, b) => a.price - b.price)
+    }
+
+    if (sort === "high") {
+      list.sort((a, b) => b.price - a.price)
+    }
+
+    return list
+  }, [products, search, category, sort, showFavorites, favorites])
+
+  const categories = useMemo(
+    () => Array.from(new Set(products.map(p => p.category))),
+    [products]
+  )
+
+  const start = (page - 1) * ITEMS_PER_PAGE
+  const paginated = filtered.slice(start, start + ITEMS_PER_PAGE)
+
+  if (loading) return <LoadingSkeleton />
+  if (error)
+    return (
+      <p className="text-center mt-10 text-red-500">
+        Failed to load products
+      </p>
+    )
 
   return (
-    <section className="p-6 space-y-6">
-      {/* FILTER BAR */}
-      <div className="bg-white dark:bg-gray-900 dark:border-gray-800 rounded-xl border p-4 flex flex-col md:flex-row gap-4">
+    <div className="p-6 space-y-6">
+      <div className="flex flex-wrap gap-4 items-center justify-between">
         <SearchBar value={search} onChange={setSearch} />
 
         <CategoryDropdown
           categories={categories}
           selected={category}
-          onChange={(value) => {
-            setCategory(value);
-            setPage(1);
+          onChange={value => {
+            setCategory(value)
+            setPage(1)
           }}
         />
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
-          aria-label="Sort products by price"
-          className="border rounded-lg px-4 py-2
-          bg-white dark:bg-gray-800
-          text-gray-900 dark:text-gray-100
-          border-gray-300 dark:border-gray-700"
+        <SortSelect value={sort} onChange={setSort} />
+
+        <button
+          onClick={() => setShowFavorites(p => !p)}
+          className="rounded-lg border px-4 py-2"
         >
-          <option value="">Sort by price</option>
-          <option value="asc">Low to High</option>
-          <option value="desc">High to Low</option>
-        </select>
-
-        <FavoritesToggle
-          showFavorites={showFavorites}
-          onToggle={() => {
-            setShowFavorites((p) => !p);
-            setPage(1);
-          }}
-        />
+          {showFavorites ? "Show All" : "Show Favorites"}
+        </button>
       </div>
 
-      {paginated.length === 0 ? (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-20">
-          No products found.
-        </p>
-      ) : (
-        <ProductGrid products={paginated} />
-      )}
+      <ProductGrid products={paginated} />
 
-      {/* PAGINATION */}
-      <div className="flex justify-center gap-4 mt-8">
+      <div className="flex justify-center gap-4">
         <button
-          onClick={() => setPage((p) => p - 1)}
+          onClick={() => setPage(p => p - 1)}
           disabled={page === 1}
-          className="px-4 py-2 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 rounded-lg border disabled:opacity-50"
         >
           Previous
         </button>
 
         <button
-          onClick={() => setPage((p) => p + 1)}
-          disabled={start + ITEMS_PER_PAGE >= sorted.length}
-          className="px-4 py-2 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => setPage(p => p + 1)}
+          disabled={start + ITEMS_PER_PAGE >= filtered.length}
+          className="px-4 py-2 rounded-lg border disabled:opacity-50"
         >
           Next
         </button>
       </div>
-    </section>
-  );
+    </div>
+  )
 }
