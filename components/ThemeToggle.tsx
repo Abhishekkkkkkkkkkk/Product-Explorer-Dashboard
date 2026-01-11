@@ -7,9 +7,9 @@ export default function ThemeToggle() {
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       aria-label="Toggle dark mode"
-      className="ml-4 px-3 py-2 rounded border"
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      className="px-3 py-2 rounded border"
     >
       {theme === "dark" ? "🌙" : "☀️"}
     </button>
