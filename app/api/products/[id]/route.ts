@@ -2,11 +2,13 @@ import { NextResponse } from "next/server"
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   try {
     const res = await fetch(
-      `https://fakestoreapi.com/products/${params.id}`,
+      `https://fakestoreapi.com/products/${id}`,
       {
         headers: {
           "User-Agent": "Mozilla/5.0",
