@@ -1,3 +1,5 @@
+export const runtime = "nodejs"
+
 import { getProducts } from "@/lib/api"
 import ProductsClient from "@/components/ProductsClient"
 

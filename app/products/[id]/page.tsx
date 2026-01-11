@@ -1,3 +1,5 @@
+export const runtime = "nodejs"
+
 import Image from "next/image"
 import Link from "next/link"
 import { getProductById } from "@/lib/api"
@@ -37,7 +39,6 @@ export default async function ProductPage({ params }: Props) {
           </span>
         </div>
 
-        {/* ACTION BUTTONS */}
         <div className="mt-6 flex flex-wrap gap-4">
           <FavoriteButton id={product.id} />
 
