@@ -1,13 +1,11 @@
 import { headers } from "next/headers"
 import { Product } from "@/types/product"
 
-async function getBaseUrl(): Promise<string> {
+async function getBaseUrl() {
   const h = await headers()
   const host = h.get("host")
 
-  if (!host) {
-    throw new Error("Missing host header")
-  }
+  if (!host) return null
 
   const protocol =
     process.env.NODE_ENV === "development" ? "http" : "https"
@@ -16,29 +14,35 @@ async function getBaseUrl(): Promise<string> {
 }
 
 export async function getProducts(): Promise<Product[]> {
-  const baseUrl = await getBaseUrl()
+  try {
+    const baseUrl = await getBaseUrl()
+    if (!baseUrl) return []
 
-  const res = await fetch(`${baseUrl}/api/products`, {
-    cache: "no-store",
-  })
+    const res = await fetch(`${baseUrl}/api/products`, {
+      cache: "no-store",
+    })
 
-  if (!res.ok) {
-    throw new Error("Failed to load products")
+    if (!res.ok) return []
+
+    return res.json()
+  } catch {
+    return []
   }
-
-  return res.json()
 }
 
-export async function getProductById(id: string): Promise<Product> {
-  const baseUrl = await getBaseUrl()
+export async function getProductById(id: string): Promise<Product | null> {
+  try {
+    const baseUrl = await getBaseUrl()
+    if (!baseUrl) return null
 
-  const res = await fetch(`${baseUrl}/api/products/${id}`, {
-    cache: "no-store",
-  })
+    const res = await fetch(`${baseUrl}/api/products/${id}`, {
+      cache: "no-store",
+    })
 
-  if (!res.ok) {
-    throw new Error("Failed to load product")
+    if (!res.ok) return null
+
+    return res.json()
+  } catch {
+    return null
   }
-
-  return res.json()
 }

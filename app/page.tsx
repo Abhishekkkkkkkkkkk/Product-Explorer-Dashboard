@@ -5,5 +5,6 @@ import ProductsClient from "@/components/ProductsClient"
 
 export default async function HomePage() {
   const products = await getProducts()
+
   return <ProductsClient products={products} />
 }
