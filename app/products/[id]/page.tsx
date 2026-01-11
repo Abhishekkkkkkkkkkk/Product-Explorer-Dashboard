@@ -1,8 +1,5 @@
-export const runtime = "nodejs"
-
 import Image from "next/image"
 import Link from "next/link"
-import { notFound } from "next/navigation"
 import { getProductById } from "@/lib/api"
 import FavoriteButton from "@/components/FavoriteButton"
 
@@ -13,10 +10,6 @@ interface Props {
 export default async function ProductPage({ params }: Props) {
   const { id } = await params
   const product = await getProductById(id)
-
-  if (!product) {
-    notFound()
-  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto grid md:grid-cols-2 gap-10">
@@ -44,6 +37,7 @@ export default async function ProductPage({ params }: Props) {
           </span>
         </div>
 
+        {/* ACTION BUTTONS */}
         <div className="mt-6 flex flex-wrap gap-4">
           <FavoriteButton id={product.id} />
 

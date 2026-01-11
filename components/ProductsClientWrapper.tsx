@@ -1,12 +1,12 @@
-"use client"
+// "use client"
 
-import dynamic from "next/dynamic"
+// import dynamic from "next/dynamic"
 
-const ProductsClient = dynamic(
-  () => import("./ProductsClient"),
-  { ssr: false }
-)
+// const ProductsClient = dynamic(
+//   () => import("./ProductsClient"),
+//   { ssr: false }
+// )
 
-export default function ProductsClientWrapper() {
-  return <ProductsClient />
-}
+// export default function ProductsClientWrapper() {
+//   return <ProductsClient />
+// }

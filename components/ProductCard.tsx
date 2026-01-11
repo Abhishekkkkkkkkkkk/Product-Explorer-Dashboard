@@ -14,9 +14,9 @@ export default function ProductCard({ product }: Props) {
   const favorite = isFavorite(product.id)
 
   return (
-    <div className="bg-white dark:bg-gray-900 dark:border-gray-800 dark:text-gray-100 rounded-xl border shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl border shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
       <Link href={`/products/${product.id}`}>
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 flex justify-center">
+        <div className="bg-gray-50 p-4 flex justify-center">
           <Image
             src={product.image}
             alt={product.title}
@@ -29,27 +29,24 @@ export default function ProductCard({ product }: Props) {
 
       <div className="p-4 flex flex-col flex-1">
         <Link href={`/products/${product.id}`}>
-          <h3 className="font-semibold line-clamp-2 hover:text-purple-600 dark:hover:text-purple-400 transition">
+          <h3 className="font-semibold line-clamp-2 hover:text-purple-600 transition">
             {product.title}
           </h3>
         </Link>
 
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          {product.category}
-        </p>
+        <p className="text-sm text-gray-500 mt-1">{product.category}</p>
 
         <div className="mt-auto flex items-center justify-between pt-4">
-          <span className="font-bold text-blue-600 dark:text-blue-400">
+          <span className="font-bold text-blue-600">
             ${product.price}
           </span>
 
           <button
             onClick={() => toggleFavorite(product.id)}
-            aria-pressed={favorite}
             className={`text-sm font-medium ${
               favorite
                 ? "text-red-500"
-                : "text-purple-600 dark:text-purple-400"
+                : "text-purple-600 hover:text-purple-700"
             }`}
           >
             {favorite ? "♥" : "♡"}
