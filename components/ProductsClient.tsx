@@ -11,8 +11,6 @@ import CategoryDropdown from "./CategoryDropdown"
 const ITEMS_PER_PAGE = 8
 
 export default function ProductsClient() {
-  const [mounted, setMounted] = useState(false)
-
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -23,14 +21,7 @@ export default function ProductsClient() {
   const [page, setPage] = useState(1)
   const [showFavorites, setShowFavorites] = useState(false)
 
-  // 🔒 ENSURE CLIENT-ONLY EXECUTION
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
     async function loadProducts() {
       try {
         const res = await fetch("https://fakestoreapi.com/products")
@@ -45,38 +36,23 @@ export default function ProductsClient() {
     }
 
     loadProducts()
-  }, [mounted])
+  }, [])
 
-  if (!mounted) return null
-  if (loading) return <LoadingSkeleton />
-  if (error)
-    return (
-      <p className="text-center mt-10 text-red-500">
-        Failed to load products
-      </p>
-    )
-
+  // 🔒 ALL MEMOS MUST COME BEFORE RETURNS
   const favorites = useMemo<number[]>(() => {
+    if (typeof window === "undefined") return []
     return JSON.parse(localStorage.getItem("favorites") || "[]")
   }, [])
 
   const filtered = useMemo(() => {
     let list = [...products]
 
-    if (showFavorites) {
-      list = list.filter(p => favorites.includes(p.id))
-    }
-
-    if (search) {
+    if (showFavorites) list = list.filter(p => favorites.includes(p.id))
+    if (search)
       list = list.filter(p =>
         p.title.toLowerCase().includes(search.toLowerCase())
       )
-    }
-
-    if (category) {
-      list = list.filter(p => p.category === category)
-    }
-
+    if (category) list = list.filter(p => p.category === category)
     if (sort === "low") list.sort((a, b) => a.price - b.price)
     if (sort === "high") list.sort((a, b) => b.price - a.price)
 
@@ -90,6 +66,15 @@ export default function ProductsClient() {
 
   const start = (page - 1) * ITEMS_PER_PAGE
   const paginated = filtered.slice(start, start + ITEMS_PER_PAGE)
+
+  // ✅ RETURNS COME LAST
+  if (loading) return <LoadingSkeleton />
+  if (error)
+    return (
+      <p className="text-center mt-10 text-red-500">
+        Failed to load products
+      </p>
+    )
 
   return (
     <div className="p-6 space-y-6">
@@ -109,8 +94,7 @@ export default function ProductsClient() {
 
         <button
           onClick={() => setShowFavorites(p => !p)}
-          className="rounded-lg border px-4 py-2 font-medium
-          bg-purple-600 text-white hover:bg-purple-700 transition"
+          className="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 transition"
         >
           {showFavorites ? "Show All" : "Show Favorites"}
         </button>

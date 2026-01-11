@@ -1,5 +1,5 @@
-import ProductsClient from "@/components/ProductsClient"
+import ProductsClientWrapper from "@/components/ProductsClientWrapper"
 
 export default function HomePage() {
-  return <ProductsClient />
+  return <ProductsClientWrapper />
 }
