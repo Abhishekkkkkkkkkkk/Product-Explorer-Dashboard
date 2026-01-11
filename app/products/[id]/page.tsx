@@ -1,15 +1,23 @@
 import Image from "next/image"
-import Link from "next/link"
-import { getProductById } from "@/lib/api"
-import FavoriteButton from "@/components/FavoriteButton"
+import { notFound } from "next/navigation"
+import ProductActions from "@/components/ProductActions"
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
+async function getProduct(id: string) {
+  const res = await fetch(`https://fakestoreapi.com/products/${id}`, {
+    cache: "no-store",
+  })
+
+  if (!res.ok) notFound()
+  return res.json()
+}
+
 export default async function ProductPage({ params }: Props) {
   const { id } = await params
-  const product = await getProductById(id)
+  const product = await getProduct(id)
 
   return (
     <div className="p-6 max-w-5xl mx-auto grid md:grid-cols-2 gap-10">
@@ -31,30 +39,12 @@ export default async function ProductPage({ params }: Props) {
           {product.description}
         </p>
 
-        <div className="mt-6 flex items-center gap-4">
-          <span className="text-2xl font-bold text-blue-600">
-            ${product.price}
-          </span>
+        <div className="mt-6 text-2xl font-bold text-blue-600">
+          ${product.price}
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="mt-6 flex flex-wrap gap-4">
-          <FavoriteButton id={product.id} />
-
-          <Link
-            href="/"
-            className="rounded-lg border px-4 py-2 font-medium text-purple-600 hover:bg-purple-50 transition"
-          >
-            Go to Home
-          </Link>
-
-          <Link
-            href="/?favorites=true"
-            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 transition"
-          >
-            Go to Favorites
-          </Link>
-        </div>
+        {/* CLIENT ACTIONS */}
+        <ProductActions productId={product.id} />
       </div>
     </div>
   )
